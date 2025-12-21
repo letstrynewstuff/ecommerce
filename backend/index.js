@@ -1,3 +1,6 @@
+
+
+// // index.js
 // import express from "express";
 // import mongoose from "mongoose";
 // import cors from "cors";
@@ -6,8 +9,6 @@
 // import http from "http";
 // import { Server } from "socket.io";
 // import { fileURLToPath } from "url";
-
-
 
 // // Route imports
 // import adminRoutes from "./routes/admin.routes.js";
@@ -18,7 +19,6 @@
 // import authRoutes from "./routes/auth.routes.js";
 // import { createAdminIfNotExists } from "./utils/createAdmin.js";
 
-
 // // Models
 // import ChatMessage from "./models/ChatMessage.js";
 
@@ -26,57 +26,57 @@
 
 // const app = express();
 
+// // =======================
 // // Middleware
+// // =======================
 // app.use(cors());
 // app.use(express.json());
-
-// // Health check
-// app.get("/", (req, res) => {
-//   res.send("API is running...");
-// });
-
-// // Routes
-// app.use("/api/admin", adminRoutes);
-// app.use("/api/users", userRoutes);
-// app.use("/api/products", productRoutes);
-// app.use("/api/orders", orderRoutes);
-// app.use("/api/locations", locationRoutes);
-
-
-// app.use("/api/auth", authRoutes);
-
-
 
 // // Static folder for product images
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// // MongoDB Connection
+// // =======================
+// // Health Check
+// // =======================
+// app.get("/", (req, res) => {
+//   res.send("API is running...");
+// });
+
+// // =======================
+// // Routes
+// // =======================
+// app.use("/api/admin", adminRoutes);
+// app.use("/api/users", userRoutes);
+// app.use("/api/products", productRoutes);
+// app.use("/api/orders", orderRoutes);
+// app.use("/api/locations", locationRoutes);
+// app.use("/api/auth", authRoutes);
+
+// // =======================
+// // MongoDB Connection + Admin Creation
+// // =======================
 // const connectDB = async () => {
-//     mongoose.connection.once("open", async () => {
-//       try {
-//         const indexes = await mongoose.connection.db
-//           .collection("users")
-//           .indexes();
+//   mongoose.connection.once("open", async () => {
+//     try {
+//       const indexes = await mongoose.connection.db.collection("users").indexes();
+//       const hasUsernameIndex = indexes.some((i) => i.name === "username_1");
 
-//         const hasUsernameIndex = indexes.some((i) => i.name === "username_1");
-
-//         if (hasUsernameIndex) {
-//           await mongoose.connection.db
-//             .collection("users")
-//             .dropIndex("username_1");
-
-//           console.log("✅ Removed legacy username index");
-//         }
-//       } catch (err) {
-//         console.error("Index cleanup error:", err.message);
+//       if (hasUsernameIndex) {
+//         await mongoose.connection.db.collection("users").dropIndex("username_1");
+//         console.log("✅ Removed legacy username index");
 //       }
-//     });
+//     } catch (err) {
+//       console.error("Index cleanup error:", err.message);
+//     }
+//   });
+
 //   try {
 //     await mongoose.connect(process.env.MONGO_URI);
-//     console.log("MongoDB Connected"); 
-//     // 🔥 CREATE ADMIN HERE
+//     console.log("MongoDB Connected");
+
+//     // Create admin if it doesn't exist
 //     await createAdminIfNotExists();
 //   } catch (err) {
 //     console.error("MongoDB Connection Error:", err);
@@ -86,13 +86,14 @@
 
 // connectDB();
 
-// //  SOCKET.IO SETUP
-
+// // =======================
+// // SOCKET.IO SETUP
+// // =======================
 // const server = http.createServer(app);
 
 // const io = new Server(server, {
 //   cors: {
-//     origin: "*", // restrict later in production
+//     origin: "*", // restrict to frontend URL in production
 //     methods: ["GET", "POST"],
 //   },
 // });
@@ -109,11 +110,7 @@
 
 //     onlineUsers[userId] = socket.id;
 
-//     // Load chat history
-//     const messages = await ChatMessage.find({ userId }).sort({
-//       createdAt: 1,
-//     });
-
+//     const messages = await ChatMessage.find({ userId }).sort({ createdAt: 1 });
 //     socket.emit("chat_history", messages);
 //   });
 
@@ -142,7 +139,6 @@
 //     });
 
 //     const userSocketId = onlineUsers[userId];
-
 //     if (userSocketId) {
 //       io.to(userSocketId).emit("new_message", newMessage);
 //     }
@@ -153,24 +149,20 @@
 //     console.log("🔴 Socket disconnected:", socket.id);
 
 //     Object.keys(onlineUsers).forEach((key) => {
-//       if (onlineUsers[key] === socket.id) {
-//         delete onlineUsers[key];
-//       }
+//       if (onlineUsers[key] === socket.id) delete onlineUsers[key];
 //     });
 //   });
 // });
 
-// /* =======================
-//    SERVER START
-// ======================= */
+// // =======================
+// // SERVER START
+// // =======================
 // const PORT = process.env.PORT || 5000;
-
 // server.listen(PORT, () => {
 //   console.log(`🚀 Server + Socket.IO running on port ${PORT}`);
 // });
 
 
-// index.js
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -180,13 +172,15 @@ import http from "http";
 import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 
-// Route imports
+// Routes
 import adminRoutes from "./routes/admin.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import locationRoutes from "./routes/location.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+
+// Utils
 import { createAdminIfNotExists } from "./utils/createAdmin.js";
 
 // Models
@@ -197,25 +191,27 @@ dotenv.config();
 const app = express();
 
 // =======================
-// Middleware
+// GLOBAL MIDDLEWARE
 // =======================
 app.use(cors());
 app.use(express.json());
 
-// Static folder for product images
+// =======================
+// STATIC FILES
+// =======================
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // =======================
-// Health Check
+// HEALTH CHECK
 // =======================
 app.get("/", (req, res) => {
-  res.send("API is running...");
+  res.send("✅ SecureComm API is running...");
 });
 
 // =======================
-// Routes
+// ROUTES
 // =======================
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
@@ -225,32 +221,38 @@ app.use("/api/locations", locationRoutes);
 app.use("/api/auth", authRoutes);
 
 // =======================
-// MongoDB Connection + Admin Creation
+// DATABASE CONNECTION
 // =======================
 const connectDB = async () => {
-  mongoose.connection.once("open", async () => {
-    try {
-      const indexes = await mongoose.connection.db.collection("users").indexes();
-      const hasUsernameIndex = indexes.some((i) => i.name === "username_1");
-
-      if (hasUsernameIndex) {
-        await mongoose.connection.db.collection("users").dropIndex("username_1");
-        console.log("✅ Removed legacy username index");
-      }
-    } catch (err) {
-      console.error("Index cleanup error:", err.message);
-    }
-  });
-
   try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("MongoDB Connected");
+    console.log("🔌 Connecting to MongoDB...");
+    console.log("🗄️ Mongo URI:", process.env.MONGO_URI);
 
-    // Create admin if it doesn't exist
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("✅ MongoDB Connected");
+
+    // Clean legacy index (safe)
+    mongoose.connection.once("open", async () => {
+      try {
+        const indexes = await mongoose.connection.db
+          .collection("users")
+          .indexes();
+
+        if (indexes.some((i) => i.name === "username_1")) {
+          await mongoose.connection.db
+            .collection("users")
+            .dropIndex("username_1");
+          console.log("🧹 Removed legacy username index");
+        }
+      } catch (err) {
+        console.error("Index cleanup error:", err.message);
+      }
+    });
+
     await createAdminIfNotExists();
   } catch (err) {
-    console.error("MongoDB Connection Error:", err);
-    process.exit(1); // exit process if connection fails
+    console.error("❌ MongoDB Connection Error:", err);
+    process.exit(1);
   }
 };
 
@@ -263,18 +265,16 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*", // restrict to frontend URL in production
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
 
-// Track online users
-const onlineUsers = {}; // userId -> socketId
+const onlineUsers = {};
 
 io.on("connection", (socket) => {
   console.log("🟢 Socket connected:", socket.id);
 
-  /* USER JOINS CHAT */
   socket.on("join_chat", async ({ userId }) => {
     if (!userId) return;
 
@@ -284,7 +284,6 @@ io.on("connection", (socket) => {
     socket.emit("chat_history", messages);
   });
 
-  /* USER SENDS MESSAGE */
   socket.on("user_message", async ({ userId, message }) => {
     if (!userId || !message) return;
 
@@ -294,11 +293,9 @@ io.on("connection", (socket) => {
       message,
     });
 
-    // Send to admin dashboard
     io.emit("admin_receive_message", newMessage);
   });
 
-  /* ADMIN SENDS MESSAGE */
   socket.on("admin_message", async ({ userId, message }) => {
     if (!userId || !message) return;
 
@@ -314,12 +311,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  /* DISCONNECT */
   socket.on("disconnect", () => {
     console.log("🔴 Socket disconnected:", socket.id);
-
-    Object.keys(onlineUsers).forEach((key) => {
-      if (onlineUsers[key] === socket.id) delete onlineUsers[key];
+    Object.keys(onlineUsers).forEach((id) => {
+      if (onlineUsers[id] === socket.id) delete onlineUsers[id];
     });
   });
 });
@@ -329,5 +324,5 @@ io.on("connection", (socket) => {
 // =======================
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`🚀 Server + Socket.IO running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
