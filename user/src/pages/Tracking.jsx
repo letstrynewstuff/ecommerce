@@ -231,7 +231,7 @@ export default function Tracking() {
   useEffect(() => {
     async function fetchTracking() {
       try {
-        const res = await fetch(`${API_URL}/locations/track/${trackingCode}`);
+        const res = await fetch(`${API_URL}/locations/tracking/${trackingCode}`);
 
         if (!res.ok) {
           throw new Error("Tracking code not found");
