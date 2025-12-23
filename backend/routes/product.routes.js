@@ -1,17 +1,4 @@
-// const express = require("express");
-// const router = express.Router();
-// const {
-//   getProducts,
-//   getProductById,
-//   createProduct,
-// } = require("../controllers/product.controller");
-// const { adminAuth } = require("../middleware/auth.middleware");
 
-// router.get("/", getProducts);
-// router.get("/:id", getProductById);
-// router.post("/", adminAuth, createProduct); // Protected
-
-// module.exports = router;
 
 
 import { Router } from "express";
