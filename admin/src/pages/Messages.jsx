@@ -1,16 +1,8 @@
 // import React, { useState, useEffect, useRef } from "react";
-// import {
-//   Send,
-//   ArrowLeft,
-//   Phone,
-//   Video,
-//   Search,
-//   MoreVertical,
-//   Users,
-// } from "lucide-react";
+// import { Send, ArrowLeft, Search, MoreVertical, Users } from "lucide-react";
 // import { io } from "socket.io-client";
-
-// const SOCKET_URL = "http://localhost:5000";
+// import { useNavigate } from "react-router-dom";
+// import { SOCKET_URL } from "../services/api"; // ✅ dynamic socket URL
 
 // export default function Messages() {
 //   const [connectedUsers, setConnectedUsers] = useState([]);
@@ -20,24 +12,30 @@
 
 //   const socketRef = useRef(null);
 //   const messagesEndRef = useRef(null);
+//   const navigate = useNavigate();
 
-//   // Scroll chat to bottom
+//   // Scroll to bottom
 //   const scrollToBottom = () => {
 //     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 //   };
 
+//   // ==========================
 //   // CONNECT SOCKET
+//   // ==========================
 //   useEffect(() => {
-//     const socket = io(SOCKET_URL);
+//     const socket = io(SOCKET_URL, {
+//       transports: ["websocket"],
+//       withCredentials: true,
+//     });
+
 //     socketRef.current = socket;
+//     console.log("🟢 Admin socket connected:", SOCKET_URL);
 
-//     console.log("🟢 Admin socket connected");
-
-//     // RECEIVE MESSAGE FROM USER
 //     socket.on("admin_receive_message", (msg) => {
-//       // Add user to sidebar if not exists
+//       // Add / update user list
 //       setConnectedUsers((prev) => {
 //         const exists = prev.find((u) => u.userId === msg.userId);
+
 //         if (exists) {
 //           return prev.map((u) =>
 //             u.userId === msg.userId ? { ...u, hasUnread: true } : u
@@ -48,13 +46,12 @@
 //           ...prev,
 //           {
 //             userId: msg.userId,
-//             name: "User",
 //             hasUnread: true,
 //           },
 //         ];
 //       });
 
-//       // If admin is chatting with this user → append message
+//       // Append message if active chat
 //       if (selectedUser?.userId === msg.userId) {
 //         setMessages((prev) => [
 //           ...prev,
@@ -71,18 +68,16 @@
 //       }
 //     });
 
-//     return () => {
-//       socket.disconnect();
-//     };
+//     return () => socket.disconnect();
 //   }, [selectedUser]);
 
-//   // LOAD CHAT HISTORY (from backend DB via socket)
+//   // ==========================
+//   // SELECT USER
+//   // ==========================
 //   const selectUser = (user) => {
 //     setSelectedUser(user);
+//     setMessages([]);
 
-//     setMessages([]); // clear current chat
-
-//     // Remove unread badge
 //     setConnectedUsers((prev) =>
 //       prev.map((u) =>
 //         u.userId === user.userId ? { ...u, hasUnread: false } : u
@@ -90,7 +85,9 @@
 //     );
 //   };
 
+//   // ==========================
 //   // SEND MESSAGE
+//   // ==========================
 //   const handleSend = () => {
 //     if (!inputText.trim() || !selectedUser) return;
 
@@ -104,10 +101,8 @@
 //       }),
 //     };
 
-//     // Update UI immediately
 //     setMessages((prev) => [...prev, msg]);
 
-//     // Send to backend
 //     socketRef.current.emit("admin_message", {
 //       userId: selectedUser.userId,
 //       message: inputText,
@@ -116,18 +111,28 @@
 //     setInputText("");
 //   };
 
-//   useEffect(() => {
-//     scrollToBottom();
-//   }, [messages]);
+//   useEffect(scrollToBottom, [messages]);
 
 //   return (
-//     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 flex">
-//       {/* SIDEBAR */}
-//       <div className="w-80 bg-slate-900 border-r border-purple-500/30">
+//     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 flex flex-col md:flex-row">
+//       {/* Sidebar */}
+//       <div
+//         className={`w-full md:w-80 bg-slate-900 border-b md:border-r border-purple-500/30 ${
+//           selectedUser ? "hidden md:block" : "block"
+//         }`}
+//       >
 //         <div className="p-6 border-b border-purple-500/20">
-//           <h2 className="text-xl font-bold text-purple-300 flex items-center gap-2">
-//             <Users /> Active Chats
-//           </h2>
+//           <div className="flex items-center gap-3">
+//             <button
+//               onClick={() => navigate(-1)}
+//               className="text-purple-400 hover:text-purple-300"
+//             >
+//               <ArrowLeft />
+//             </button>
+//             <h2 className="text-xl font-bold text-purple-300 flex items-center gap-2">
+//               <Users /> Active Chats
+//             </h2>
+//           </div>
 //           <p className="text-sm text-gray-400 mt-1">
 //             {connectedUsers.length} users
 //           </p>
@@ -141,45 +146,47 @@
 //               <div
 //                 key={user.userId}
 //                 onClick={() => selectUser(user)}
-//                 className={`p-4 cursor-pointer hover:bg-purple-900/30 border-b border-purple-500/10 ${
+//                 className={`p-4 cursor-pointer border-b border-purple-500/10 hover:bg-purple-900/30 ${
 //                   selectedUser?.userId === user.userId ? "bg-purple-900/40" : ""
 //                 }`}
 //               >
-//                 <div className="flex items-center justify-between">
-//                   <div>
-//                     <p className="font-medium text-white">
-//                       User {user.userId.slice(-4)}
-//                     </p>
-//                     <p className="text-xs text-gray-400">Click to chat</p>
-//                   </div>
+//                 <div className="flex justify-between">
+//                   <p className="text-white font-medium">
+//                     User {user.userId.slice(-4)}
+//                   </p>
 //                   {user.hasUnread && (
 //                     <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
 //                   )}
 //                 </div>
+//                 <p className="text-xs text-gray-400">Click to chat</p>
 //               </div>
 //             ))
 //           )}
 //         </div>
 //       </div>
 
-//       {/* CHAT AREA */}
+//       {/* Chat Area */}
 //       <div className="flex-1 flex flex-col">
 //         {selectedUser ? (
 //           <>
-//             {/* HEADER */}
-//             <div className="px-6 py-4 bg-slate-800 border-b border-purple-500/20 flex justify-between">
-//               <h2 className="text-white font-semibold">
-//                 Chat with User {selectedUser.userId.slice(-4)}
-//               </h2>
+//             <div className="bg-slate-800 px-6 py-4 flex justify-between border-b border-purple-500/20">
+//               <div className="flex items-center gap-4">
+//                 <button
+//                   onClick={() => setSelectedUser(null)}
+//                   className="md:hidden text-purple-400"
+//                 >
+//                   <ArrowLeft />
+//                 </button>
+//                 <h2 className="text-white font-semibold">
+//                   Chat with User {selectedUser.userId.slice(-4)}
+//                 </h2>
+//               </div>
 //               <div className="flex gap-3 text-purple-400">
-//                 <Phone />
-//                 <Video />
 //                 <Search />
 //                 <MoreVertical />
 //               </div>
 //             </div>
 
-//             {/* MESSAGES */}
 //             <div className="flex-1 overflow-y-auto p-6 space-y-4">
 //               {messages.map((msg) => (
 //                 <div
@@ -196,7 +203,7 @@
 //                     }`}
 //                   >
 //                     <p>{msg.text}</p>
-//                     <p className="text-xs mt-1 opacity-70 text-right">
+//                     <p className="text-xs opacity-70 text-right mt-1">
 //                       {msg.time}
 //                     </p>
 //                   </div>
@@ -205,14 +212,13 @@
 //               <div ref={messagesEndRef} />
 //             </div>
 
-//             {/* INPUT */}
-//             <div className="p-4 bg-slate-800 border-t border-purple-500/20 flex gap-3">
+//             <div className="p-4 bg-slate-800 flex gap-3 border-t border-purple-500/20">
 //               <input
 //                 value={inputText}
 //                 onChange={(e) => setInputText(e.target.value)}
 //                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
-//                 placeholder="Type your message..."
 //                 className="flex-1 px-4 py-2 rounded-full bg-slate-700 text-white outline-none"
+//                 placeholder="Type your message..."
 //               />
 //               <button
 //                 onClick={handleSend}
@@ -231,7 +237,6 @@
 //     </div>
 //   );
 // }
-
 
 // admin/src/pages/Messages.jsx
 import React, { useState, useEffect, useRef } from "react";

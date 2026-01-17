@@ -10,10 +10,8 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
 export default function Chat() {
   const [user, setUser] = useState(null);
-
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
-
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const navigate = useNavigate(); // For back navigation
@@ -33,7 +31,6 @@ export default function Chat() {
   -------------------------------- */
   useEffect(() => {
     if (!user?._id) return;
-
     const socket = io(SOCKET_URL, {
       transports: ["websocket"],
     });
@@ -217,3 +214,4 @@ export default function Chat() {
     </div>
   );
 }
+

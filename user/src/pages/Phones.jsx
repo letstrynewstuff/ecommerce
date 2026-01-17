@@ -5,6 +5,10 @@ import { Link } from "react-router-dom";
 import { fetchProducts } from "../services/api";
 import Navbar from "../components/Navbar.jsx";
 
+const API_URL =
+  import.meta.env.MODE === "production"
+    ? "https://ecommerce-0ih0.onrender.com/api"
+    : "http://localhost:5000/api";
 
 export default function Phones() {
   const { addToCart } = useCart();
@@ -34,8 +38,13 @@ export default function Phones() {
               key={product._id}
               className="bg-purple-900/20 rounded-2xl border border-purple-500/30 p-6"
             >
-              <img
+              {/* <img
                 src={`http://localhost:5000${product.image}`}
+                alt={product.name}
+                className="w-full h-64 object-cover rounded-xl mb-4"
+              /> */}
+              <img
+                src={`${API_URL.replace("/api", "")}${product.image}`}
                 alt={product.name}
                 className="w-full h-64 object-cover rounded-xl mb-4"
               />
