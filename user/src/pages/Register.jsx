@@ -62,7 +62,7 @@ export default function Register() {
     }
 
     try {
-      const res = await axios.post(`${API_URL}/api/users/register`, {
+      const res = await axios.post(`${API_URL}/users/register`, {
         name: formData.name.trim(),
         email: formData.email.trim(),
         password: formData.password,
