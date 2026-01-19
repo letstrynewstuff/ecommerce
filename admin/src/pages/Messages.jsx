@@ -262,22 +262,16 @@
 //   );
 // }
 
-
-// admin/src/pages/Messages.jsx
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Send,
-  ArrowLeft,
-  Search,
-  MoreVertical,
-  Users,
-} from "lucide-react";
+import { Send, ArrowLeft, Search, MoreVertical, Users } from "lucide-react";
 import { io } from "socket.io-client";
 import { useNavigate } from "react-router-dom";
 
-// Dynamic socket URL (works for local and production)
+// Dynamic socket URL based on env
 const SOCKET_URL =
-  import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+  import.meta.env.MODE === "production"
+    ? import.meta.env.VITE_API_URL_PROD.replace("/api", "")
+    : import.meta.env.VITE_API_URL_DEV.replace("/api", "");
 
 export default function Messages() {
   const [connectedUsers, setConnectedUsers] = useState([]);
@@ -289,44 +283,33 @@ export default function Messages() {
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
 
-  // Scroll chat to bottom
-  const scrollToBottom = () => {
+  // Scroll to bottom
+  const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
-  /* -------------------------------
-     CONNECT SOCKET
-  -------------------------------- */
+  // 1️⃣ Connect socket
   useEffect(() => {
     const adminToken = localStorage.getItem("adminToken");
     if (!adminToken) return;
 
     const socket = io(SOCKET_URL, {
       transports: ["websocket"],
-      auth: { token: adminToken }, // optional, if backend verifies admin token
+      auth: { token: adminToken },
     });
 
     socketRef.current = socket;
     console.log("🟢 Admin socket connected:", SOCKET_URL);
 
-    // Receive message from user
     socket.on("admin_receive_message", (msg) => {
-      // Add user to sidebar if not exists
       setConnectedUsers((prev) => {
         const exists = prev.find((u) => u.userId === msg.userId);
-        if (exists) {
+        if (exists)
           return prev.map((u) =>
-            u.userId === msg.userId ? { ...u, hasUnread: true } : u
+            u.userId === msg.userId ? { ...u, hasUnread: true } : u,
           );
-        }
-
-        return [
-          ...prev,
-          { userId: msg.userId, name: "User", hasUnread: true },
-        ];
+        return [...prev, { userId: msg.userId, name: "User", hasUnread: true }];
       });
 
-      // Append message if currently chatting with this user
       if (selectedUser?.userId === msg.userId) {
         setMessages((prev) => [
           ...prev,
@@ -343,30 +326,23 @@ export default function Messages() {
       }
     });
 
-    return () => {
-      socket.disconnect();
-    };
+    return () => socket.disconnect();
   }, [selectedUser]);
 
-  /* -------------------------------
-     Select user / load chat
-  -------------------------------- */
+  // 2️⃣ Select user / load chat
   const selectUser = (user) => {
     setSelectedUser(user);
     setMessages([]);
-
     setConnectedUsers((prev) =>
       prev.map((u) =>
-        u.userId === user.userId ? { ...u, hasUnread: false } : u
-      )
+        u.userId === user.userId ? { ...u, hasUnread: false } : u,
+      ),
     );
   };
 
-  /* -------------------------------
-     Send message
-  -------------------------------- */
+  // 3️⃣ Send message
   const handleSend = () => {
-    if (!inputText.trim() || !selectedUser) return;
+    if (!inputText.trim() || !selectedUser || !socketRef.current) return;
 
     const msg = {
       id: Date.now(),
@@ -378,10 +354,8 @@ export default function Messages() {
       }),
     };
 
-    // Optimistic UI update
     setMessages((prev) => [...prev, msg]);
 
-    // Emit to backend
     socketRef.current.emit("admin_message", {
       userId: selectedUser.userId,
       message: inputText,
@@ -390,20 +364,16 @@ export default function Messages() {
     setInputText("");
   };
 
+  // 4️⃣ Auto-scroll
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  /* -------------------------------
-     UI
-  -------------------------------- */
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 flex flex-col md:flex-row">
       {/* Sidebar */}
       <div
-        className={`w-full md:w-80 bg-slate-900 border-b md:border-r border-purple-500/30 ${
-          selectedUser ? "hidden md:block" : "block"
-        }`}
+        className={`w-full md:w-80 bg-slate-900 border-b md:border-r border-purple-500/30 ${selectedUser ? "hidden md:block" : "block"}`}
       >
         <div className="p-6 border-b border-purple-500/20 flex items-center gap-3">
           <button
@@ -474,16 +444,10 @@ export default function Messages() {
               {messages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex ${
-                    msg.sender === "admin" ? "justify-end" : "justify-start"
-                  }`}
+                  className={`flex ${msg.sender === "admin" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`px-4 py-2 rounded-2xl max-w-md ${
-                      msg.sender === "admin"
-                        ? "bg-purple-600 text-white"
-                        : "bg-slate-700 text-gray-100"
-                    }`}
+                    className={`px-4 py-2 rounded-2xl max-w-md ${msg.sender === "admin" ? "bg-purple-600 text-white" : "bg-slate-700 text-gray-100"}`}
                   >
                     <p>{msg.text}</p>
                     <p className="text-xs mt-1 opacity-70 text-right">
