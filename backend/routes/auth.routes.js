@@ -1,55 +1,55 @@
 
 
-import express from "express";
-import User from "../models/User.js";
-import { signToken } from "../utils/jwt.js";
+// import express from "express";
+// import User from "../models/User.js";
 
-const router = express.Router();
 
-/**
- * REGISTER
- */
-router.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+// const router = express.Router();
 
-  const exists = await User.findOne({ username });
-  if (exists) {
-    return res.status(400).json({ message: "User already exists" });
-  }
+// /**
+//  * REGISTER
+//  */
+// router.post("/register", async (req, res) => {
+//   const { username, password } = req.body;
 
-  const user = await User.create({
-    username,
-    password, // ⚠️ plain text
-    role: "user",
-  });
+//   const exists = await User.findOne({ username });
+//   if (exists) {
+//     return res.status(400).json({ message: "User already exists" });
+//   }
 
-  res.status(201).json({ message: "Account created" });
-});
+//   const user = await User.create({
+//     username,
+//     password, // ⚠️ plain text
+//     role: "user",
+//   });
 
-/**
- * LOGIN
- */
-router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+//   res.status(201).json({ message: "Account created" });
+// });
 
-  const user = await User.findOne({ username });
-  if (!user || user.password !== password) {
-    return res.status(401).json({ message: "Invalid credentials" });
-  }
+// /**
+//  * LOGIN
+//  */
+// router.post("/login", async (req, res) => {
+//   const { username, password } = req.body;
 
-  const token = signToken({
-    id: user._id,
-    role: user.role,
-  });
+//   const user = await User.findOne({ username });
+//   if (!user || user.password !== password) {
+//     return res.status(401).json({ message: "Invalid credentials" });
+//   }
 
-  res.json({
-    token,
-    user: {
-      id: user._id,
-      username: user.username,
-      role: user.role,
-    },
-  });
-});
+//   const token = signToken({
+//     id: user._id,
+//     role: user.role,
+//   });
 
-export default router;
+//   res.json({
+//     token,
+//     user: {
+//       id: user._id,
+//       username: user.username,
+//       role: user.role,
+//     },
+//   });
+// });
+
+// export default router;

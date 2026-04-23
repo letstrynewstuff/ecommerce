@@ -39,16 +39,7 @@ export async function getProductById(req, res) {
   }
 }
 
-// CREATE product (admin later)
-// export async function createProduct(req, res) {
-//   try {
-//     const product = new Product(req.body);
-//     await product.save();
-//     res.status(201).json(product);
-//   } catch (err) {
-//     res.status(500).json({ msg: "Server Error" });
-//   }
-// }
+
 
 export async function createProduct(req, res) {
   try {

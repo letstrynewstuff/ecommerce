@@ -50,9 +50,9 @@ export default function AppRoutes() {
   const isPublicRoute = publicRoutes.includes(location.pathname);
 
   // Mock authentication state
-  // Replace this with your real auth context/logic later
+
   const isLoggedIn = () => {
-    // Example: check for token in localStorage
+ 
     return localStorage.getItem("authToken") !== null;
   };
 
